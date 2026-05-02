@@ -49,16 +49,13 @@ const SignUp: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      // Save role temporarily for post-OAuth profile creation
-      localStorage.setItem('pending_role', role);
+      // Pass role in the redirect URL to ensure it's preserved through the OAuth flow
+      const redirectTo = `${window.location.origin}/auth/callback?role=${role}`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            role: role
-          }
+          redirectTo
         }
       });
       if (error) {

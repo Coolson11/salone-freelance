@@ -18,6 +18,8 @@ const AuthCallback: React.FC = () => {
         }
 
         const user = session.user;
+        const params = new URLSearchParams(window.location.search);
+        const urlRole = params.get('role');
 
         // 1. Check if user already exists in profiles table
         const { data: profile, error: profileError } = await supabase
@@ -31,9 +33,9 @@ const AuthCallback: React.FC = () => {
         let role = profile?.role;
 
         if (!profile) {
-          // 2. If user doesn't exist, read the temporarily stored role
-          // Check metadata first (in case it was set during signup), then localStorage, then default
-          const storedRole = user.user_metadata?.role || localStorage.getItem('pending_role') || 'freelancer';
+          // 2. If user doesn't exist, determine role
+          // Priority: URL param > metadata > localStorage > default
+          const storedRole = urlRole || user.user_metadata?.role || localStorage.getItem('pending_role') || 'freelancer';
           role = storedRole;
 
           // 3. Create a new profile record
@@ -48,11 +50,10 @@ const AuthCallback: React.FC = () => {
 
           if (insertError) {
             console.error('Error creating profile:', insertError);
-            // Even if insert fails, we might still want to try to redirect
           }
         }
 
-        // 4. Clean up temporary role storage
+        // 4. Cleanup
         localStorage.removeItem('pending_role');
 
         // 5. Redirect based on role

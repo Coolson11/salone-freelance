@@ -16,6 +16,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const syncProfile = async (currentUser: User) => {
+      // Skip sync if we are on the callback page - let the callback handle it
+      if (window.location.pathname === '/auth/callback') return;
+
       try {
         const { full_name, role: metadataRole } = currentUser.user_metadata || {};
         
