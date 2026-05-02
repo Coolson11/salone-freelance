@@ -7,6 +7,7 @@ import { fetchJobsByClientId, makeChatId, deleteJob, markJobAsCompleted, createR
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import DashboardLayout from './components/DashboardLayout';
+import { ProfileSkeleton } from './components/Skeletons';
 import Home from './pages/Home';
 import BrowseJobs from './pages/BrowseJobs';
 import BrowseTalent from './pages/BrowseTalent';
@@ -26,7 +27,13 @@ import AuthCallback from './pages/AuthCallback';
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <ProfileSkeleton />
+      </DashboardLayout>
+    );
+  }
   if (!user) return <Navigate to="/login" />;
 
   return <>{children}</>;
