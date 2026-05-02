@@ -40,7 +40,7 @@ const SignUp: React.FC = () => {
           },
         });
       }
-    } catch (err) {
+    } catch {
       setError('Unable to create account. Please try again.');
     } finally {
       setLoading(false);
@@ -48,7 +48,16 @@ const SignUp: React.FC = () => {
   };
 
   const handleGoogleLogin = async () => {
-    setError('Google sign-in is not configured yet.');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) {
+        setError(error.message);
+      }
+    } catch {
+      setError('Unable to sign in with Google. Please try again.');
+    }
   };
 
   return (
