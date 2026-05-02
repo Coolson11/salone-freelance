@@ -2,7 +2,7 @@
 
 Salone Freelance is a modern marketplace platform designed to connect verified talent with businesses in Sierra Leone. The platform allows freelancers to showcase their skills and clients to post jobs, manage applications, and collaborate through a secure and responsive interface.
 
-## 🚀 Features
+##  Features
 
 -   **User Roles:** Dedicated experiences for both Freelancers and Clients.
 -   **Job Marketplace:** Browse and apply for jobs with filters for category, budget, and experience level.
@@ -12,14 +12,14 @@ Salone Freelance is a modern marketplace platform designed to connect verified t
 -   **Responsive Design:** Fully optimized for mobile, tablet, and desktop devices.
 -   **Authentication:** Secure sign-up and login powered by Supabase.
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 -   **Frontend:** React (TypeScript), Vite, Tailwind CSS
 -   **Icons:** Lucide React
 -   **Backend & Database:** Supabase (PostgreSQL, Auth, Storage, Real-time)
 -   **Routing:** React Router Dom
 
-## 💻 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
