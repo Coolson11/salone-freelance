@@ -17,34 +17,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const syncProfile = async (currentUser: User) => {
       try {
-        const { full_name, role } = currentUser.user_metadata || {};
+        const { full_name, role: metadataRole } = currentUser.user_metadata || {};
         
-        // If we don't have a role in metadata, we check if one exists in DB first
-        // to avoid overwriting a 'client' role with default 'freelancer'
-        if (!role) {
-          const { data: existing } = await supabase
-            .from('public_profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .maybeSingle();
-          
-          if (existing) return; // Profile already exists with a role, don't overwrite
-        }
-
-        if (!full_name && !role) return;
-
-        // Upsert the profile to ensure the database matches the choice made during sign-up
-        const { error } = await supabase
+        // 1. Check if profile already exists in the database
+        const { data: existing, error: fetchError } = await supabase
           .from('public_profiles')
-          .upsert({
+          .select('role')
+          .eq('id', currentUser.id)
+          .maybeSingle();
+        
+        if (fetchError) throw fetchError;
+
+        // 2. If profile exists, don't overwrite the role
+        if (existing) return;
+
+        // 3. Profile doesn't exist, we need to create it.
+        // Priority: metadata > localStorage (for OAuth) > default
+        const pendingRole = localStorage.getItem('pending_role');
+        const roleToUse = metadataRole || pendingRole || 'freelancer';
+
+        const { error: insertError } = await supabase
+          .from('public_profiles')
+          .insert({
             id: currentUser.id,
             full_name: full_name || '',
-            role: role || 'freelancer',
-            email: currentUser.email
-          }, { onConflict: 'id' });
+            role: roleToUse,
+            email: currentUser.email,
+          });
 
-        if (error) {
-          console.error('Error syncing profile to database:', error);
+        if (insertError) {
+          console.error('Error creating profile during sync:', insertError);
+        } else {
+          // Successfully created, clean up temporary storage
+          localStorage.removeItem('pending_role');
         }
       } catch (err) {
         console.error('Unexpected error during profile sync:', err);
