@@ -54,7 +54,7 @@ interface JobWithApp extends JobRecord {
 }
 
 const JobsRoute: React.FC = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [jobs, setJobs] = useState<JobWithApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -63,7 +63,6 @@ const JobsRoute: React.FC = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const role = user?.user_metadata?.role;
 
   const loadJobs = async () => {
     if (!user?.id || !role) return;

@@ -42,17 +42,21 @@ const StatCard = ({ icon: Icon, label, value, color }: { icon: React.ComponentTy
 );
 
 const DashboardHome: React.FC = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [stats, setStats] = useState({ activeJobs: 0, pendingOffers: 0, unreadMessages: 0 });
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
   const [profileName, setProfileName] = useState<string | null>(null);
-  const [profileRole, setProfileRole] = useState<string>('');
   const [talent, setTalent] = useState<Talent[]>([]);
   const [loadingTalent, setLoadingTalent] = useState(false);
 
+  const profileRole = useMemo(() => {
+    if (!role) return '';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  }, [role]);
+
   useEffect(() => {
     const loadTalent = async () => {
-      if (profileRole?.toLowerCase() !== 'client') return;
+      if (role !== 'client') return;
       setLoadingTalent(true);
       try {
         const profiles = await fetchTalentProfiles();
@@ -86,22 +90,16 @@ const DashboardHome: React.FC = () => {
     };
 
     loadTalent();
-  }, [profileRole, user?.id]);
+  }, [role, user?.id]);
 
   useEffect(() => {
     const loadDashboard = async () => {
-      if (!user?.id) return;
+      if (!user?.id || !role) return;
       try {
         const statsData = await fetchDashboardStats();
         setStats(statsData);
 
         // Fetch jobs based on role
-        const role = user?.user_metadata?.role;
-        if (!role) {
-          console.warn('DashboardHome: No role found in user metadata');
-          return;
-        }
-
         let jobsData;
         if (role === 'client') {
           jobsData = await fetchJobsByClientId(user.id);
@@ -119,7 +117,7 @@ const DashboardHome: React.FC = () => {
     };
 
     loadDashboard();
-  }, [user]);
+  }, [user, role]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -127,19 +125,12 @@ const DashboardHome: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('public_profiles')
-          .select('full_name, role')
+          .select('full_name')
           .eq('id', user.id)
           .maybeSingle();
 
         if (error) throw error;
         setProfileName(data?.full_name ?? null);
-        
-        if (data?.role) {
-          setProfileRole(data.role.charAt(0).toUpperCase() + data.role.slice(1));
-        } else if (user?.user_metadata?.role) {
-          const mRole = user.user_metadata.role;
-          setProfileRole(mRole.charAt(0).toUpperCase() + mRole.slice(1));
-        }
       } catch (error) {
         console.error('Failed to load profile:', error);
       }

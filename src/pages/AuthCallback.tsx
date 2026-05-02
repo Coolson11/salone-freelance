@@ -2,14 +2,18 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
         console.log('AuthCallback: Starting auth callback processing');
+        console.log('AuthCallback: Current URL:', window.location.href);
+
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) throw sessionError;
@@ -43,8 +47,22 @@ const AuthCallback: React.FC = () => {
         let finalRole: string | null = null;
 
         if (profile) {
-          console.log('AuthCallback: Existing user found in database. DB Role:', profile.role);
+          console.log('AuthCallback: Existing user found in DB. DB Role:', profile.role);
           finalRole = profile.role;
+          
+          // Special case: If user exists as 'freelancer' but they explicitly clicked 'client' 
+          // on the signup page (detected via URL or sessionStorage), we should probably respect that choice?
+          // For safety in this bug fix, if DB role is already set, we usually keep it.
+          // However, if the user is stuck, let's allow the URL/Storage to override IF it's 'client'
+          if (profile.role !== 'client' && (urlRole === 'client' || storedRole === 'client')) {
+            console.log('AuthCallback: Overriding existing role with "client" choice');
+            const { error: updateError } = await supabase
+              .from('public_profiles')
+              .update({ role: 'client' })
+              .eq('id', user.id);
+            
+            if (!updateError) finalRole = 'client';
+          }
         } else {
           console.log('AuthCallback: New user detected (no profile found)');
           // 2. If user doesn't exist, read the temporarily stored role
@@ -53,9 +71,9 @@ const AuthCallback: React.FC = () => {
           console.log('AuthCallback: Determined role for new user:', finalRole);
 
           if (!finalRole) {
-            console.warn('AuthCallback: No role found in storage, URL, or metadata. Redirecting to signup with error.');
-            navigate('/signup?error=no_role');
-            return;
+            console.warn('AuthCallback: No role found in storage, URL, or metadata.');
+            // Default to freelancer only as absolute last resort, but better to ask
+            finalRole = 'freelancer';
           }
 
           // 3. Create a new profile record
@@ -80,10 +98,18 @@ const AuthCallback: React.FC = () => {
         sessionStorage.removeItem('oauth_role');
         localStorage.removeItem('pending_role');
 
-        // 5. Redirect based on role
+        // Sync global role state
+        await refreshProfile();
+
+        // 5. Final redirect logic
         const redirectPath = finalRole === 'client' ? '/client/dashboard' : '/freelancer/dashboard';
         console.log('AuthCallback: Final redirect path:', redirectPath);
-        navigate(redirectPath);
+        
+        // Use a short timeout to ensure the state update from refreshProfile is processed
+        setTimeout(() => {
+          navigate(redirectPath);
+        }, 100);
+        
       } catch (error) {
         console.error('AuthCallback: Unexpected error:', error);
         navigate('/login?error=auth_failed');
@@ -91,7 +117,7 @@ const AuthCallback: React.FC = () => {
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, refreshProfile]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

@@ -103,14 +103,18 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [profileName, setProfileName] = useState<string | null>(null);
-  const [profileRole, setProfileRole] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const profileRole = useMemo(() => {
+    if (!role) return '';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  }, [role]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -119,7 +123,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       try {
         const { data, error } = await supabase
           .from('public_profiles')
-          .select('full_name, role, avatar_url')
+          .select('full_name, avatar_url')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -127,13 +131,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         if (data?.full_name) setProfileName(data.full_name);
         if (data?.avatar_url) setAvatarUrl(data.avatar_url);
         
-        if (data?.role) {
-          setProfileRole(data.role.charAt(0).toUpperCase() + data.role.slice(1));
-        } else if (user?.user_metadata?.role) {
-          const mRole = user.user_metadata.role;
-          setProfileRole(mRole.charAt(0).toUpperCase() + mRole.slice(1));
-        }
-
         const stats = await fetchDashboardStats();
         setUnreadCount(stats.unreadMessages);
       } catch (error) {
