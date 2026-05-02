@@ -4,6 +4,7 @@ import { Search, MoreVertical, Send, Paperclip, Smile, ArrowLeft, MessageSquare 
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { fetchChatMessages, makeChatId, sendMessage, fetchProfilesByIds, type MessageRecord } from '../services/marketplaceService';
+import { ChatListSkeleton } from '../components/Skeletons';
 
 const Messages: React.FC = () => {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ const Messages: React.FC = () => {
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sending, setSending] = useState(false);
+  const [loadingChats, setLoadingChats] = useState(true);
   const [chatMessages, setChatMessages] = useState<MessageRecord[]>([]);
   const [profiles, setProfiles] = useState<Record<string, { name: string; avatar_url?: string | null; initials: string }>>({});
   const [chatList, setChatList] = useState<
@@ -55,6 +57,7 @@ const Messages: React.FC = () => {
   useEffect(() => {
     const loadChatList = async () => {
       if (!user?.id) return;
+      setLoadingChats(true);
       try {
         const { data, error } = await supabase
           .from('messages')
@@ -106,6 +109,8 @@ const Messages: React.FC = () => {
         setChatList(chats);
       } catch (error) {
         console.error('Failed to fetch chats:', error);
+      } finally {
+        setLoadingChats(false);
       }
     };
 
@@ -207,7 +212,9 @@ const Messages: React.FC = () => {
         </div>
         
         <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-           {filteredChatList.length > 0 ? filteredChatList.map((chat) => {
+           {loadingChats ? (
+             <ChatListSkeleton />
+           ) : filteredChatList.length > 0 ? filteredChatList.map((chat) => {
               const profile = profiles[chat.peerId];
               const isSelected = chat.id === selectedChatId;
               return (

@@ -10,10 +10,12 @@ import {
   fetchMarketplaceOverviewStats,
   fetchJobs
 } from '../services/marketplaceService';
+import { CategoryCardSkeleton, JobCardSkeleton, TalentCardSkeleton } from '../components/Skeletons';
 
 const Home: React.FC = () => {
   const [jobs, setJobs] = useState<Array<{ id: string; title: string; budget: string; category: string; location: string; postedAt: string }>>([]);
   const [talent, setTalent] = useState<Array<{ id: string; name: string; skill: string; rating: number; price: string; avatar: string; avatarUrl?: string | null; skills?: string[] | string | null; location?: string | null }>>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingTalent, setLoadingTalent] = useState(true);
   const [overviewStats, setOverviewStats] = useState({
     totalTalents: 0,
@@ -23,6 +25,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       // 1. Stats & Site Audit
       try {
         const stats = await fetchMarketplaceOverviewStats();
@@ -42,6 +45,8 @@ const Home: React.FC = () => {
         })));
       } catch (e) {
         console.error('Home Page - Error fetching jobs:', e);
+      } finally {
+        setLoading(false);
       }
 
       // 3. Talent & Site-Wide Search
@@ -135,9 +140,17 @@ const Home: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((cat) => (
-              <CategoryCard key={cat.id} name={cat.name} iconName={cat.icon} />
-            ))}
+            {loading ? (
+              <>
+                <CategoryCardSkeleton />
+                <CategoryCardSkeleton />
+                <CategoryCardSkeleton />
+              </>
+            ) : (
+              categories.map((cat) => (
+                <CategoryCard key={cat.id} name={cat.name} iconName={cat.icon} />
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -155,7 +168,12 @@ const Home: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {jobs.length > 0 ? (
+            {loading ? (
+              <>
+                <JobCardSkeleton />
+                <JobCardSkeleton />
+              </>
+            ) : jobs.length > 0 ? (
               jobs.map((job) => (
                 <JobCard key={job.id} {...job} />
               ))
@@ -223,9 +241,12 @@ const Home: React.FC = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {loadingTalent ? (
-              [...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl h-[380px] animate-pulse border border-gray-100 shadow-sm" />
-              ))
+              <>
+                <TalentCardSkeleton />
+                <TalentCardSkeleton />
+                <TalentCardSkeleton />
+                <TalentCardSkeleton />
+              </>
             ) : talent.length > 0 ? (
               talent.map((t) => (
                 <TalentCard key={t.id} {...t} />

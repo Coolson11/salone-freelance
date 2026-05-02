@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import JobCard from '../components/JobCard';
 import { Search, Filter, SlidersHorizontal, X } from 'lucide-react';
 import { fetchJobs } from '../services/marketplaceService';
+import { JobCardSkeleton } from '../components/Skeletons';
 
 const BrowseJobs: React.FC = () => {
   const [jobs, setJobs] = useState<Array<{
@@ -13,9 +14,11 @@ const BrowseJobs: React.FC = () => {
     postedAt: string;
   }>>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadJobs = async () => {
+      setLoading(true);
       try {
         const data = await fetchJobs();
         setJobs(
@@ -31,6 +34,8 @@ const BrowseJobs: React.FC = () => {
       } catch (error) {
         console.error('Failed to fetch jobs:', error);
         setJobs([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -117,7 +122,13 @@ const BrowseJobs: React.FC = () => {
           {/* Job List */}
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-center mb-6">
-              <p className="text-gray-600">Showing <span className="font-bold text-gray-900">{jobs.length}</span> jobs</p>
+              <p className="text-gray-600">
+                {loading ? (
+                  <span className="inline-block w-24 h-4 bg-gray-200 animate-pulse rounded"></span>
+                ) : (
+                  <>Showing <span className="font-bold text-gray-900">{jobs.length}</span> jobs</>
+                )}
+              </p>
               <select className="bg-transparent text-sm font-medium text-gray-700 focus:outline-none cursor-pointer">
                 <option>Newest first</option>
                 <option>Highest budget</option>
@@ -126,9 +137,23 @@ const BrowseJobs: React.FC = () => {
             </div>
             
             <div className="space-y-4 sm:space-y-6">
-              {jobs.map((job) => (
-                <JobCard key={job.id} {...job} />
-              ))}
+              {loading ? (
+                <>
+                  <JobCardSkeleton />
+                  <JobCardSkeleton />
+                  <JobCardSkeleton />
+                  <JobCardSkeleton />
+                  <JobCardSkeleton />
+                </>
+              ) : jobs.length > 0 ? (
+                jobs.map((job) => (
+                  <JobCard key={job.id} {...job} />
+                ))
+              ) : (
+                <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
+                  <p className="text-gray-500">No jobs found matching your criteria.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

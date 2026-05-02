@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import TalentCard from '../components/TalentCard';
+import { StatCardSkeleton, TalentCardSkeleton } from '../components/Skeletons';
 
 interface Talent {
   id: string;
@@ -47,12 +48,44 @@ const DashboardHome: React.FC = () => {
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [talent, setTalent] = useState<Talent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingTalent, setLoadingTalent] = useState(false);
 
   const profileRole = useMemo(() => {
     if (!role) return '';
     return role.charAt(0).toUpperCase() + role.slice(1);
   }, [role]);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      if (!user?.id || !role) return;
+      setLoading(true);
+      try {
+        const statsData = await fetchDashboardStats();
+        setStats(statsData);
+
+        // Fetch jobs based on role
+        let jobsData;
+        if (role === 'client') {
+          jobsData = await fetchJobsByClientId(user.id);
+        } else if (role === 'freelancer') {
+          jobsData = await fetchCompletedJobsByFreelancerId(user.id);
+        } else {
+          setLoading(false);
+          return;
+        }
+        
+        const activeOnly = jobsData.filter((j: any) => j.status !== 'completed' && j.status !== 'closed');
+        setJobs(activeOnly.slice(0, 3).map((job: { id: string; title: string }) => ({ id: job.id, title: job.title })));
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, [user, role]);
 
   useEffect(() => {
     const loadTalent = async () => {
@@ -93,33 +126,6 @@ const DashboardHome: React.FC = () => {
   }, [role, user?.id]);
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      if (!user?.id || !role) return;
-      try {
-        const statsData = await fetchDashboardStats();
-        setStats(statsData);
-
-        // Fetch jobs based on role
-        let jobsData;
-        if (role === 'client') {
-          jobsData = await fetchJobsByClientId(user.id);
-        } else if (role === 'freelancer') {
-          jobsData = await fetchCompletedJobsByFreelancerId(user.id);
-        } else {
-          return;
-        }
-        
-        const activeOnly = jobsData.filter((j: any) => j.status !== 'completed' && j.status !== 'closed');
-        setJobs(activeOnly.slice(0, 3).map((job: { id: string; title: string }) => ({ id: job.id, title: job.title })));
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-      }
-    };
-
-    loadDashboard();
-  }, [user, role]);
-
-  useEffect(() => {
     const loadProfile = async () => {
       if (!user?.id) return;
       try {
@@ -149,14 +155,23 @@ const DashboardHome: React.FC = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back, {displayName}!</h1>
-          <p className="text-gray-500">
-            {profileRole === 'Client' 
-              ? "Manage your projects and find top talent in Sierra Leone." 
-              : "Here's what's happening with your projects today."}
-          </p>
+          {loading ? (
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-48"></div>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back, {displayName}!</h1>
+              <p className="text-gray-500">
+                {profileRole === 'Client' 
+                  ? "Manage your projects and find top talent in Sierra Leone." 
+                  : "Here's what's happening with your projects today."}
+              </p>
+            </>
+          )}
         </div>
-        {profileRole === 'Client' && (
+        {!loading && profileRole === 'Client' && (
           <Link 
             to="/dashboard/post-job" 
             className="inline-flex items-center bg-primary-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200"
@@ -167,30 +182,41 @@ const DashboardHome: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          icon={Briefcase} 
-          label={profileRole === 'Client' ? "My Job Posts" : "Active Jobs"} 
-          value={String(stats.activeJobs)} 
-          color="bg-primary-100 text-primary-600" 
-        />
-        <StatCard 
-          icon={DollarSign} 
-          label={profileRole === 'Client' ? "Total Spent" : "Total Earned"} 
-          value="SLE 0" 
-          color="bg-green-100 text-green-600" 
-        />
-        <StatCard 
-          icon={Clock} 
-          label={profileRole === 'Client' ? "Applications" : "Pending Offers"} 
-          value={String(stats.pendingOffers)} 
-          color="bg-blue-100 text-blue-600" 
-        />
-        <StatCard 
-          icon={MessageSquare} 
-          label="Unread Messages" 
-          value={String(stats.unreadMessages || 0)} 
-          color="bg-purple-100 text-purple-600" 
-        />
+        {loading ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            <StatCard 
+              icon={Briefcase} 
+              label={profileRole === 'Client' ? "My Job Posts" : "Active Jobs"} 
+              value={String(stats.activeJobs)} 
+              color="bg-primary-100 text-primary-600" 
+            />
+            <StatCard 
+              icon={DollarSign} 
+              label={profileRole === 'Client' ? "Total Spent" : "Total Earned"} 
+              value="SLE 0" 
+              color="bg-green-100 text-green-600" 
+            />
+            <StatCard 
+              icon={Clock} 
+              label={profileRole === 'Client' ? "Applications" : "Pending Offers"} 
+              value={String(stats.pendingOffers)} 
+              color="bg-blue-100 text-blue-600" 
+            />
+            <StatCard 
+              icon={MessageSquare} 
+              label="Unread Messages" 
+              value={String(stats.unreadMessages || 0)} 
+              color="bg-purple-100 text-purple-600" 
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -199,10 +225,16 @@ const DashboardHome: React.FC = () => {
                <h3 className="font-bold text-gray-900">
                  {profileRole === 'Client' ? "Your Recent Postings" : "Ongoing Projects"}
                </h3>
-               <Link to="/dashboard/jobs" className="text-sm font-bold text-primary-600 hover:text-primary-700">View All</Link>
+               {!loading && <Link to="/dashboard/jobs" className="text-sm font-bold text-primary-600 hover:text-primary-700">View All</Link>}
             </div>
             <div className="divide-y divide-gray-50">
-               {jobs.length > 0 ? jobs.slice(0, 3).map((job) => (
+               {loading ? (
+                 <div className="p-6 space-y-4">
+                   <div className="h-16 bg-gray-50 animate-pulse rounded-xl" />
+                   <div className="h-16 bg-gray-50 animate-pulse rounded-xl" />
+                   <div className="h-16 bg-gray-50 animate-pulse rounded-xl" />
+                 </div>
+               ) : jobs.length > 0 ? jobs.slice(0, 3).map((job) => (
                   <div key={job.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer group">
                      <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
@@ -226,15 +258,16 @@ const DashboardHome: React.FC = () => {
                <h3 className="font-bold text-gray-900">
                  {profileRole === 'Client' ? "Recommended Talent" : "Recent Applications"}
                </h3>
-               <Link to={profileRole === 'Client' ? "/talent" : "/dashboard/applications"} className="text-sm font-bold text-primary-600 hover:text-primary-700">View All</Link>
+               {!loading && (
+                 <Link to={profileRole === 'Client' ? "/talent" : "/dashboard/applications"} className="text-sm font-bold text-primary-600 hover:text-primary-700">View All</Link>
+               )}
             </div>
             <div className="p-6">
                {profileRole === 'Client' ? (
-                 loadingTalent ? (
+                 loading || loadingTalent ? (
                    <div className="grid grid-cols-1 gap-4">
-                     {[...Array(2)].map((_, i) => (
-                       <div key={i} className="h-40 bg-gray-50 animate-pulse rounded-xl border border-gray-100" />
-                     ))}
+                     <TalentCardSkeleton />
+                     <TalentCardSkeleton />
                    </div>
                  ) : talent.length > 0 ? (
                    <div className="grid grid-cols-1 gap-4">
@@ -254,15 +287,21 @@ const DashboardHome: React.FC = () => {
                    </div>
                  )
                ) : (
-                 <div className="py-8 text-center">
-                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mx-auto mb-4">
-                      <ExternalLink size={24} />
+                 loading ? (
+                   <div className="space-y-4">
+                     <div className="h-32 bg-gray-50 animate-pulse rounded-xl" />
                    </div>
-                   <p className="text-gray-500 mb-6">You haven't applied to any new jobs recently.</p>
-                   <Link to="/jobs" className="inline-block bg-primary-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary-700 transition-colors">
-                      Find Work
-                   </Link>
-                 </div>
+                 ) : (
+                   <div className="py-8 text-center">
+                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mx-auto mb-4">
+                        <ExternalLink size={24} />
+                     </div>
+                     <p className="text-gray-500 mb-6">You haven't applied to any new jobs recently.</p>
+                     <Link to="/jobs" className="inline-block bg-primary-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary-700 transition-colors">
+                        Find Work
+                     </Link>
+                   </div>
+                 )
                )}
             </div>
          </div>

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { MapPin, Clock, Calendar, Shield, ArrowLeft, Send, X, FileText, Upload, Loader2 } from 'lucide-react';
 import { applyToJob, fetchJobs, fetchTalentProfileById, hasAppliedToJob, uploadDocument } from '../services/marketplaceService';
 import { useAuth } from '../context/AuthContext';
+import { JobDetailsSkeleton } from '../components/Skeletons';
 
 const JobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -105,8 +106,8 @@ const JobDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      <div className="bg-gray-50 min-h-screen">
+        <JobDetailsSkeleton />
       </div>
     );
   }

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchTalentProfileById, updateProfile, uploadAvatar } from '../services/marketplaceService';
 import type { TalentProfileRecord } from '../services/marketplaceService';
 import { User, MapPin, Save, Loader2, Camera } from 'lucide-react';
+import { FormSkeleton } from '../components/Skeletons';
 
 const DashboardProfilePage: React.FC = () => {
   const { user } = useAuth();
@@ -74,11 +75,7 @@ const DashboardProfilePage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-primary-600" size={32} />
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   return (

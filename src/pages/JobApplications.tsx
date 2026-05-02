@@ -4,6 +4,7 @@ import { ArrowLeft, User, MessageSquare, Check, X, Loader2, FileText, Download, 
 import { fetchApplicationsByJobId, updateApplicationStatus, makeChatId } from '../services/marketplaceService';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
+import { ApplicantSkeleton } from '../components/Skeletons';
 
 const JobApplications: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -117,14 +118,6 @@ const JobApplications: React.FC = () => {
     return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext || '');
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-primary-600" size={32} />
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-8">
@@ -138,7 +131,13 @@ const JobApplications: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {applications.length > 0 ? (
+        {loading ? (
+          <>
+            <ApplicantSkeleton />
+            <ApplicantSkeleton />
+            <ApplicantSkeleton />
+          </>
+        ) : applications.length > 0 ? (
           applications.map((app) => (
             <div key={app.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <div className="flex flex-col md:flex-row gap-6">

@@ -3,6 +3,7 @@ import TalentCard from '../components/TalentCard';
 import { Search, MapPin, Star, Filter, X } from 'lucide-react';
 import { fetchTalentProfiles } from '../services/marketplaceService';
 import { supabase } from '../supabaseClient';
+import { TalentCardSkeleton } from '../components/Skeletons';
 
 const BrowseTalent: React.FC = () => {
   const [talent, setTalent] = useState<Array<{ id: string; name: string; skill: string; rating: number; price: string; avatar: string; avatarUrl?: string | null }>>([]);
@@ -142,9 +143,13 @@ const BrowseTalent: React.FC = () => {
             {/* Talent Grid */}
             <div className="lg:col-span-3">
                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                 <p className="text-gray-600">
-                   {loading ? 'Loading...' : `Found ${talent.length} professionals`}
-                 </p>
+                 <div className="text-gray-600 min-h-[1.5rem]">
+                   {loading ? (
+                     <div className="h-4 bg-gray-200 animate-pulse rounded w-32"></div>
+                   ) : (
+                     `Found ${talent.length} professionals`
+                   )}
+                 </div>
                  <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-500">Sort by:</span>
                     <select className="bg-transparent text-sm font-bold text-gray-900 focus:outline-none cursor-pointer">
@@ -157,9 +162,12 @@ const BrowseTalent: React.FC = () => {
                
                {loading ? (
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   {[...Array(6)].map((_, i) => (
-                     <div key={i} className="bg-white rounded-xl h-64 animate-pulse border border-gray-100" />
-                   ))}
+                   <TalentCardSkeleton />
+                   <TalentCardSkeleton />
+                   <TalentCardSkeleton />
+                   <TalentCardSkeleton />
+                   <TalentCardSkeleton />
+                   <TalentCardSkeleton />
                  </div>
                ) : talent.length > 0 ? (
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Star, DollarSign, MessageSquare, Briefcase, ChevronRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { fetchReviewsForFreelancer, fetchTalentProfileById, makeChatId, fetchJobsByClientId, fetchCompletedJobsByFreelancerId } from '../services/marketplaceService';
 import { useAuth } from '../context/AuthContext';
+import { ProfileSkeleton } from '../components/Skeletons';
 
 const TalentProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,8 +57,8 @@ const TalentProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="animate-spin text-primary-600" size={48} />
+      <div className="bg-gray-50 min-h-screen">
+        <ProfileSkeleton />
       </div>
     );
   }
