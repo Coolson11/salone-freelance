@@ -105,7 +105,7 @@ const Home: React.FC = () => {
     });
     
     const activeCategories = Array.from(categoryCounts.keys());
-    const displayCategories = activeCategories.length > 0 ? activeCategories : ['Development', 'Design', 'Marketing', 'Writing'];
+    const displayCategories = activeCategories.length > 0 ? activeCategories : ['Development', 'Design', 'Marketing', 'Writing', 'Business', 'Others'];
 
     return displayCategories.slice(0, 6).map((name, idx) => ({
       id: String(idx + 1),

@@ -72,6 +72,7 @@ const PostJob: React.FC = () => {
                 <option>Marketing</option>
                 <option>Writing</option>
                 <option>Business</option>
+                <option>Others</option>
               </select>
             </div>
             <div>
