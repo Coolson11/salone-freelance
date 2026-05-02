@@ -32,7 +32,8 @@ const AuthCallback: React.FC = () => {
 
         if (!profile) {
           // 2. If user doesn't exist, read the temporarily stored role
-          const storedRole = localStorage.getItem('pending_role') || 'freelancer';
+          // Check metadata first (in case it was set during signup), then localStorage, then default
+          const storedRole = user.user_metadata?.role || localStorage.getItem('pending_role') || 'freelancer';
           role = storedRole;
 
           // 3. Create a new profile record
