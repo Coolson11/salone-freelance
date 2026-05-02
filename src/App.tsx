@@ -63,15 +63,15 @@ const JobsRoute: React.FC = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const role = user?.user_metadata?.role || 'freelancer';
+  const role = user?.user_metadata?.role;
 
   const loadJobs = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !role) return;
     try {
       let data;
       if (role === 'client') {
         data = await fetchJobsByClientId(user.id);
-      } else {
+      } else if (role === 'freelancer') {
         // For freelancers, fetch all applications to show status
         const { data: apps, error } = await supabase
           .from('applications')

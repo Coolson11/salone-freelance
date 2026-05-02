@@ -17,10 +17,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const syncProfile = async (currentUser: User) => {
       // Skip sync if we are on the callback page - let the callback handle it
-      if (window.location.pathname === '/auth/callback') return;
+      if (window.location.pathname === '/auth/callback') {
+        console.log('AuthContext: On callback page, skipping background sync');
+        return;
+      }
 
       try {
         const { full_name, role: metadataRole } = currentUser.user_metadata || {};
+        console.log('AuthContext: Syncing profile for:', currentUser.email);
         
         // 1. Check if profile already exists in the database
         const { data: existing, error: fetchError } = await supabase
@@ -32,12 +36,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (fetchError) throw fetchError;
 
         // 2. If profile exists, don't overwrite the role
-        if (existing) return;
+        if (existing) {
+          console.log('AuthContext: Profile already exists with role:', existing.role);
+          return;
+        }
 
         // 3. Profile doesn't exist, we need to create it.
-        // Priority: metadata > localStorage (for OAuth) > default
+        // Priority: metadata > sessionStorage (for OAuth) > localStorage
+        const oauthRole = sessionStorage.getItem('oauth_role');
         const pendingRole = localStorage.getItem('pending_role');
-        const roleToUse = metadataRole || pendingRole || 'freelancer';
+        const roleToUse = metadataRole || oauthRole || pendingRole;
+        
+        console.log('AuthContext: Determined role for sync:', roleToUse);
+
+        if (!roleToUse) {
+          console.warn('AuthContext: No role found for new user. Skipping profile creation to avoid default role.');
+          return;
+        }
 
         const { error: insertError } = await supabase
           .from('public_profiles')
@@ -49,13 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
 
         if (insertError) {
-          console.error('Error creating profile during sync:', insertError);
+          console.error('AuthContext: Error creating profile during sync:', insertError);
         } else {
+          console.log('AuthContext: Profile successfully created during sync');
           // Successfully created, clean up temporary storage
+          sessionStorage.removeItem('oauth_role');
           localStorage.removeItem('pending_role');
         }
       } catch (err) {
-        console.error('Unexpected error during profile sync:', err);
+        console.error('AuthContext: Unexpected error during profile sync:', err);
       }
     };
 

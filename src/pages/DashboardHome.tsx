@@ -46,13 +46,13 @@ const DashboardHome: React.FC = () => {
   const [stats, setStats] = useState({ activeJobs: 0, pendingOffers: 0, unreadMessages: 0 });
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
   const [profileName, setProfileName] = useState<string | null>(null);
-  const [profileRole, setProfileRole] = useState<string>('Freelancer');
+  const [profileRole, setProfileRole] = useState<string>('');
   const [talent, setTalent] = useState<Talent[]>([]);
   const [loadingTalent, setLoadingTalent] = useState(false);
 
   useEffect(() => {
     const loadTalent = async () => {
-      if (profileRole !== 'Client') return;
+      if (profileRole?.toLowerCase() !== 'client') return;
       setLoadingTalent(true);
       try {
         const profiles = await fetchTalentProfiles();
@@ -96,12 +96,19 @@ const DashboardHome: React.FC = () => {
         setStats(statsData);
 
         // Fetch jobs based on role
-        const role = user?.user_metadata?.role || 'freelancer';
+        const role = user?.user_metadata?.role;
+        if (!role) {
+          console.warn('DashboardHome: No role found in user metadata');
+          return;
+        }
+
         let jobsData;
         if (role === 'client') {
           jobsData = await fetchJobsByClientId(user.id);
-        } else {
+        } else if (role === 'freelancer') {
           jobsData = await fetchCompletedJobsByFreelancerId(user.id);
+        } else {
+          return;
         }
         
         const activeOnly = jobsData.filter((j: any) => j.status !== 'completed' && j.status !== 'closed');
@@ -127,10 +134,11 @@ const DashboardHome: React.FC = () => {
         if (error) throw error;
         setProfileName(data?.full_name ?? null);
         
-        if (user?.user_metadata?.role) {
-          setProfileRole(user.user_metadata.role === 'client' ? 'Client' : 'Freelancer');
-        } else if (data?.role) {
-          setProfileRole(data.role === 'client' ? 'Client' : 'Freelancer');
+        if (data?.role) {
+          setProfileRole(data.role.charAt(0).toUpperCase() + data.role.slice(1));
+        } else if (user?.user_metadata?.role) {
+          const mRole = user.user_metadata.role;
+          setProfileRole(mRole.charAt(0).toUpperCase() + mRole.slice(1));
         }
       } catch (error) {
         console.error('Failed to load profile:', error);

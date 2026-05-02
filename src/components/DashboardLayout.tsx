@@ -105,7 +105,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const [profileName, setProfileName] = useState<string | null>(null);
-  const [profileRole, setProfileRole] = useState<string>('Freelancer');
+  const [profileRole, setProfileRole] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -127,10 +127,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         if (data?.full_name) setProfileName(data.full_name);
         if (data?.avatar_url) setAvatarUrl(data.avatar_url);
         
-        if (user?.user_metadata?.role) {
-          setProfileRole(user.user_metadata.role === 'client' ? 'Client' : 'Freelancer');
-        } else if (data?.role) {
-          setProfileRole(data.role === 'client' ? 'Client' : 'Freelancer');
+        if (data?.role) {
+          setProfileRole(data.role.charAt(0).toUpperCase() + data.role.slice(1));
+        } else if (user?.user_metadata?.role) {
+          const mRole = user.user_metadata.role;
+          setProfileRole(mRole.charAt(0).toUpperCase() + mRole.slice(1));
         }
 
         const stats = await fetchDashboardStats();

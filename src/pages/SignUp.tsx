@@ -4,7 +4,7 @@ import { Mail, Lock, User as UserIcon, ArrowRight, Check, AlertCircle } from 'lu
 import { supabase } from '../supabaseClient';
 
 const SignUp: React.FC = () => {
-  const [role, setRole] = useState<'client' | 'freelancer'>('freelancer');
+  const [role, setRole] = useState<'client' | 'freelancer' | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,6 +15,10 @@ const SignUp: React.FC = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!role) {
+      setError('Please select a role (Freelancer or Client) first.');
+      return;
+    }
     setError(null);
     setLoading(true);
 
@@ -48,9 +52,18 @@ const SignUp: React.FC = () => {
   };
 
   const handleGoogleLogin = async () => {
+    if (!role) {
+      setError('Please select a role (Freelancer or Client) before continuing with Google.');
+      return;
+    }
+
     try {
-      // Pass role in the redirect URL to ensure it's preserved through the OAuth flow
+      console.log('SignUp: Saving selected role to sessionStorage:', role);
+      sessionStorage.setItem('oauth_role', role);
+      
+      // Pass role in the redirect URL as a secondary backup
       const redirectTo = `${window.location.origin}/auth/callback?role=${role}`;
+      console.log('SignUp: Redirecting to Google OAuth with redirectTo:', redirectTo);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -61,7 +74,8 @@ const SignUp: React.FC = () => {
       if (error) {
         setError(error.message);
       }
-    } catch {
+    } catch (err) {
+      console.error('SignUp: Google OAuth error:', err);
       setError('Unable to sign in with Google. Please try again.');
     }
   };

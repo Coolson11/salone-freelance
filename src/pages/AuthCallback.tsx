@@ -9,10 +9,12 @@ const AuthCallback: React.FC = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log('AuthCallback: Starting auth callback processing');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) throw sessionError;
         if (!session?.user) {
+          console.error('AuthCallback: No user session found');
           navigate('/login');
           return;
         }
@@ -20,6 +22,11 @@ const AuthCallback: React.FC = () => {
         const user = session.user;
         const params = new URLSearchParams(window.location.search);
         const urlRole = params.get('role');
+        const storedRole = sessionStorage.getItem('oauth_role');
+        
+        console.log('AuthCallback: Authenticated user:', user.email);
+        console.log('AuthCallback: URL role parameter:', urlRole);
+        console.log('AuthCallback: SessionStorage role:', storedRole);
 
         // 1. Check if user already exists in profiles table
         const { data: profile, error: profileError } = await supabase
@@ -28,42 +35,57 @@ const AuthCallback: React.FC = () => {
           .eq('id', user.id)
           .maybeSingle();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('AuthCallback: Error fetching profile:', profileError);
+          throw profileError;
+        }
 
-        let role = profile?.role;
+        let finalRole: string | null = null;
 
-        if (!profile) {
-          // 2. If user doesn't exist, determine role
-          // Priority: URL param > metadata > localStorage > default
-          const storedRole = urlRole || user.user_metadata?.role || localStorage.getItem('pending_role') || 'freelancer';
-          role = storedRole;
+        if (profile) {
+          console.log('AuthCallback: Existing user found in database. DB Role:', profile.role);
+          finalRole = profile.role;
+        } else {
+          console.log('AuthCallback: New user detected (no profile found)');
+          // 2. If user doesn't exist, read the temporarily stored role
+          // Priority: SessionStorage > URL param > metadata
+          finalRole = storedRole || urlRole || user.user_metadata?.role;
+          console.log('AuthCallback: Determined role for new user:', finalRole);
+
+          if (!finalRole) {
+            console.warn('AuthCallback: No role found in storage, URL, or metadata. Redirecting to signup with error.');
+            navigate('/signup?error=no_role');
+            return;
+          }
 
           // 3. Create a new profile record
+          console.log('AuthCallback: Creating new profile with role:', finalRole);
           const { error: insertError } = await supabase
             .from('public_profiles')
             .insert({
               id: user.id,
               email: user.email,
               full_name: user.user_metadata?.full_name || '',
-              role: storedRole,
+              role: finalRole,
             });
 
           if (insertError) {
-            console.error('Error creating profile:', insertError);
+            console.error('AuthCallback: Error creating profile:', insertError);
+            throw insertError;
           }
         }
 
-        // 4. Cleanup
+        // 4. Cleanup temporary storage
+        console.log('AuthCallback: Cleaning up temporary storage');
+        sessionStorage.removeItem('oauth_role');
         localStorage.removeItem('pending_role');
 
         // 5. Redirect based on role
-        if (role === 'client') {
-          navigate('/client/dashboard');
-        } else {
-          navigate('/freelancer/dashboard');
-        }
+        const redirectPath = finalRole === 'client' ? '/client/dashboard' : '/freelancer/dashboard';
+        console.log('AuthCallback: Final redirect path:', redirectPath);
+        navigate(redirectPath);
       } catch (error) {
-        console.error('OAuth callback error:', error);
+        console.error('AuthCallback: Unexpected error:', error);
         navigate('/login?error=auth_failed');
       }
     };
