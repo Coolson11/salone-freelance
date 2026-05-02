@@ -21,6 +21,7 @@ import PostJob from './pages/PostJob';
 import JobApplications from './pages/JobApplications';
 import DashboardProfilePage from './pages/DashboardProfilePage';
 import DashboardSettingsPage from './pages/DashboardSettingsPage';
+import AuthCallback from './pages/AuthCallback';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -30,6 +31,21 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   return <>{children}</>;
 };
+
+const DashboardRoutes: React.FC = () => (
+  <ProtectedRoute>
+    <DashboardLayout>
+      <Routes>
+        <Route index element={<DashboardHome />} />
+        <Route path="post-job" element={<PostJob />} />
+        <Route path="jobs" element={<JobsRoute />} />
+        <Route path="jobs/:jobId/applications" element={<JobApplications />} />
+        <Route path="profile" element={<DashboardProfilePage />} />
+        <Route path="settings" element={<DashboardSettingsPage />} />
+      </Routes>
+    </DashboardLayout>
+  </ProtectedRoute>
+);
 
 interface JobWithApp extends JobRecord {
   appStatus?: string;
@@ -403,8 +419,8 @@ const JobsRoute: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/messages');
-  const isAuth = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/verify-email';
+  const isDashboard = location.pathname.includes('/dashboard') || location.pathname.startsWith('/messages');
+  const isAuth = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/verify-email' || location.pathname === '/auth/callback';
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -420,25 +436,13 @@ const AppContent: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Dashboard Protected Routes */}
-          <Route 
-            path="/dashboard/*" 
-            element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <Routes>
-                    <Route index element={<DashboardHome />} />
-                    <Route path="post-job" element={<PostJob />} />
-                    <Route path="jobs" element={<JobsRoute />} />
-                    <Route path="jobs/:jobId/applications" element={<JobApplications />} />
-                    <Route path="profile" element={<DashboardProfilePage />} />
-                    <Route path="settings" element={<DashboardSettingsPage />} />
-                  </Routes>
-                </DashboardLayout>
-              </ProtectedRoute>
-            } 
-          />
+          <Route path="/dashboard/*" element={<DashboardRoutes />} />
+          <Route path="/freelancer/dashboard/*" element={<DashboardRoutes />} />
+          <Route path="/client/dashboard/*" element={<DashboardRoutes />} />
+          
           <Route 
             path="/messages/*" 
             element={

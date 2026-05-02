@@ -18,6 +18,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const syncProfile = async (currentUser: User) => {
       try {
         const { full_name, role } = currentUser.user_metadata || {};
+        
+        // If we don't have a role in metadata, we check if one exists in DB first
+        // to avoid overwriting a 'client' role with default 'freelancer'
+        if (!role) {
+          const { data: existing } = await supabase
+            .from('public_profiles')
+            .select('role')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+          
+          if (existing) return; // Profile already exists with a role, don't overwrite
+        }
+
         if (!full_name && !role) return;
 
         // Upsert the profile to ensure the database matches the choice made during sign-up
@@ -25,8 +38,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('public_profiles')
           .upsert({
             id: currentUser.id,
-            full_name: full_name,
+            full_name: full_name || '',
             role: role || 'freelancer',
+            email: currentUser.email
           }, { onConflict: 'id' });
 
         if (error) {
