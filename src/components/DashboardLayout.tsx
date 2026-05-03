@@ -7,7 +7,8 @@ import {
   LayoutDashboard, 
   Briefcase, 
   MessageSquare, 
-  User, 
+  User,
+  Users, 
   Settings, 
   LogOut,
   Bell,
@@ -16,7 +17,10 @@ import {
   Camera,
   Loader2,
   Menu,
-  X
+  X,
+  FileText,
+  Star,
+  AlertTriangle
 } from 'lucide-react';
 
 const Sidebar: React.FC<{ role: string; isOpen: boolean; onClose: () => void }> = ({ role, isOpen, onClose }) => {
@@ -33,16 +37,31 @@ const Sidebar: React.FC<{ role: string; isOpen: boolean; onClose: () => void }> 
     }
   };
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
-    { icon: Briefcase, label: role === 'Client' ? 'Manage Jobs' : 'My Jobs', path: '/dashboard/jobs' },
-    { icon: MessageSquare, label: 'Messages', path: '/messages' },
-    { icon: User, label: 'Profile', path: '/dashboard/profile' },
-    { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
-  ];
+  let menuItems = [];
 
-  if (role === 'Client') {
-    menuItems.splice(1, 0, { icon: PlusCircle, label: 'Post Job', path: '/dashboard/post-job' });
+  if (role && role.toLowerCase() === 'admin') {
+    menuItems = [
+      { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
+      { icon: Users, label: 'Users', path: '/admin/users' },
+      { icon: Briefcase, label: 'Jobs', path: '/admin/jobs' },
+      { icon: PlusCircle, label: 'Post Job', path: '/admin/post-job' },
+      { icon: FileText, label: 'Applications', path: '/admin/applications' },
+      { icon: Star, label: 'Reviews', path: '/admin/reviews' },
+      { icon: AlertTriangle, label: 'Reports', path: '/admin/reports' },
+      { icon: Settings, label: 'Settings', path: '/admin/settings' },
+    ];
+  } else {
+    menuItems = [
+      { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
+      { icon: Briefcase, label: role === 'client' ? 'Manage Jobs' : 'My Jobs', path: '/dashboard/jobs' },
+      { icon: MessageSquare, label: 'Messages', path: '/messages' },
+      { icon: User, label: 'Profile', path: '/dashboard/profile' },
+      { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+    ];
+
+    if (role === 'client') {
+      menuItems.splice(1, 0, { icon: PlusCircle, label: 'Post Job', path: '/dashboard/post-job' });
+    }
   }
 
   return (

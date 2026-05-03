@@ -210,6 +210,43 @@ const Footer: React.FC = () => {
         <p>By continuing to use our site, you consent to our use of cookies as described in our Privacy Policy.</p>
       </div>
     ),
+    mobileApp: (
+      <div className="space-y-6">
+        <div className="bg-primary-50 p-6 rounded-2xl border border-primary-100">
+          <h4 className="font-bold text-primary-900 mb-2">How to Install the App</h4>
+          <div className="space-y-4 text-sm text-primary-800">
+            <div className="flex gap-3">
+              <span className="w-6 h-6 bg-primary-200 rounded-full flex items-center justify-center shrink-0 font-bold">1</span>
+              <p><span className="font-bold">Download the App:</span> Click download and wait for APK to finish downloading.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="w-6 h-6 bg-primary-200 rounded-full flex items-center justify-center shrink-0 font-bold">2</span>
+              <p><span className="font-bold">Open the File:</span> Go to Downloads folder or tap the downloaded file.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="w-6 h-6 bg-primary-200 rounded-full flex items-center justify-center shrink-0 font-bold">3</span>
+              <p><span className="font-bold">Allow Installation:</span> Enable "Allow installation from this browser" or "Install unknown apps" in settings.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="w-6 h-6 bg-primary-200 rounded-full flex items-center justify-center shrink-0 font-bold">4</span>
+              <p><span className="font-bold">Install the App:</span> Tap Install and wait for installation.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="w-6 h-6 bg-primary-200 rounded-full flex items-center justify-center shrink-0 font-bold">5</span>
+              <p><span className="font-bold">Launch:</span> Open Salone Freelance and log in.</p>
+            </div>
+          </div>
+        </div>
+        <a 
+          href="https://drive.google.com/uc?export=download&id=1knoOPoRcjfuCvftCH_sw-TlGlfq6jJcs" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="block w-full text-center bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200"
+        >
+          📥 Download APK Now
+        </a>
+      </div>
+    ),
   };
 
   return (
@@ -260,12 +297,12 @@ const Footer: React.FC = () => {
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold mb-6">Support</h3>
+              <h3 className="text-lg font-semibold mb-6">Mobile App</h3>
               <ul className="space-y-4 text-sm text-gray-400">
+                <li><a href="https://drive.google.com/uc?export=download&id=1knoOPoRcjfuCvftCH_sw-TlGlfq6jJcs" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Download App</a></li>
+                <li><button onClick={() => openModal('How to Install the App', footerContent.mobileApp)} className="hover:text-white transition-colors">Install Instructions</button></li>
                 <li><button onClick={() => openModal('Help Center', footerContent.helpCenter)} className="hover:text-white transition-colors">Help Center</button></li>
                 <li><button onClick={() => openModal('Trust & Safety', footerContent.trustAndSafety)} className="hover:text-white transition-colors">Trust & Safety</button></li>
-                <li><button onClick={() => openModal('Community Guidelines', footerContent.communityGuidelines)} className="hover:text-white transition-colors">Community Guidelines</button></li>
-                <li><button onClick={() => openModal('Contact Us', footerContent.contactUs)} className="hover:text-white transition-colors">Contact Us</button></li>
               </ul>
             </div>
           </div>

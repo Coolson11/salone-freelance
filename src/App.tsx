@@ -23,6 +23,12 @@ import JobApplications from './pages/JobApplications';
 import DashboardProfilePage from './pages/DashboardProfilePage';
 import DashboardSettingsPage from './pages/DashboardSettingsPage';
 import AuthCallback from './pages/AuthCallback';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminJobs from './pages/AdminJobs';
+import AdminApplications from './pages/AdminApplications';
+import AdminReviews from './pages/AdminReviews';
+import AdminReports from './pages/AdminReports';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -35,6 +41,30 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
   if (!user) return <Navigate to="/login" />;
+
+  return <>{children}</>;
+};
+
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, role, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <ProfileSkeleton />
+      </DashboardLayout>
+    );
+  }
+  
+  if (!user) return <Navigate to="/login" />;
+  
+  const normalizedRole = role?.toLowerCase();
+  console.log('AdminRoute: user=', user.email, 'role=', role, 'normalized=', normalizedRole);
+  
+  if (normalizedRole !== 'admin') {
+    console.warn('AdminRoute: Access denied. Redirecting to home.');
+    return <Navigate to="/" />;
+  }
 
   return <>{children}</>;
 };
@@ -443,6 +473,27 @@ const AppContent: React.FC = () => {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/*" 
+            element={
+              <AdminRoute>
+                <DashboardLayout>
+                  <Routes>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="jobs" element={<AdminJobs />} />
+                    <Route path="post-job" element={<PostJob />} />
+                    <Route path="applications" element={<AdminApplications />} />
+                    <Route path="reviews" element={<AdminReviews />} />
+                    <Route path="reports" element={<AdminReports />} />
+                    <Route path="settings" element={<DashboardSettingsPage />} />
+                  </Routes>
+                </DashboardLayout>
+              </AdminRoute>
+            } 
+          />
 
           {/* Dashboard Protected Routes */}
           <Route path="/dashboard/*" element={<DashboardRoutes />} />

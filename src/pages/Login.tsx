@@ -25,7 +25,28 @@ const Login: React.FC = () => {
       } else if (!data.session) {
         setError('No active session found. Please verify your email and try again.');
       } else {
-        navigate('/dashboard');
+        // Fetch role from public_profiles
+        const { data: profile, error: profileError } = await supabase
+          .from('public_profiles')
+          .select('role')
+          .eq('id', data.session.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          setError('Error fetching user profile');
+          return;
+        }
+
+        const role = profile?.role?.toLowerCase();
+        console.log('Login: User role is:', role);
+        if (role === 'admin') {
+          console.log('Login: Redirecting to admin panel');
+          navigate('/admin');
+        } else if (role === 'client') {
+          navigate('/client/dashboard');
+        } else {
+          navigate('/freelancer/dashboard');
+        }
       }
     } catch {
       setError('Unable to sign in. Please try again.');

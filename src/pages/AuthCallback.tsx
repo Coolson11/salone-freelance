@@ -102,7 +102,13 @@ const AuthCallback: React.FC = () => {
         await refreshProfile();
 
         // 5. Final redirect logic
-        const redirectPath = finalRole === 'client' ? '/client/dashboard' : '/freelancer/dashboard';
+        let redirectPath = '/freelancer/dashboard';
+        if (finalRole === 'admin') {
+          redirectPath = '/admin';
+        } else if (finalRole === 'client') {
+          redirectPath = '/client/dashboard';
+        }
+        
         console.log('AuthCallback: Final redirect path:', redirectPath);
         
         // Use a short timeout to ensure the state update from refreshProfile is processed

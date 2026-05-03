@@ -11,12 +11,14 @@ import {
   fetchJobs
 } from '../services/marketplaceService';
 import { CategoryCardSkeleton, JobCardSkeleton, TalentCardSkeleton } from '../components/Skeletons';
+import { X, Smartphone, CheckCircle2 } from 'lucide-react';
 
 const Home: React.FC = () => {
   const [jobs, setJobs] = useState<Array<{ id: string; title: string; budget: string; category: string; location: string; postedAt: string }>>([]);
   const [talent, setTalent] = useState<Array<{ id: string; name: string; skill: string; rating: number; price: string; avatar: string; avatarUrl?: string | null; skills?: string[] | string | null; location?: string | null }>>([]);
   const [loading, setLoading] = useState(true);
   const [loadingTalent, setLoadingTalent] = useState(true);
+  const [showAppModal, setShowAppModal] = useState(false);
   const [overviewStats, setOverviewStats] = useState({
     totalTalents: 0,
     totalJobs: 0,
@@ -126,6 +128,86 @@ const Home: React.FC = () => {
         totalJobs={overviewStats.totalJobs} 
         averageRating={overviewStats.averageRating} 
       />
+
+      {/* Download App Section */}
+      <section className="py-12 bg-primary-50 border-y border-primary-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm border border-primary-100 flex flex-col lg:flex-row items-center lg:justify-between gap-8 text-center lg:text-left">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center text-primary-600 shrink-0 shadow-inner">
+                <Smartphone size={32} />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">📱 Download the Salone Freelance App</h2>
+                <div className="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2 text-gray-600 text-sm sm:text-base">
+                  <span className="flex items-center gap-1.5"><CheckCircle2 size={18} className="text-primary-600 shrink-0" /> Get faster job alerts</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 size={18} className="text-primary-600 shrink-0" /> Apply on the go</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 size={18} className="text-primary-600 shrink-0" /> Chat anywhere</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+              <button 
+                onClick={() => setShowAppModal(true)}
+                className="flex-1 lg:flex-none px-8 py-4 rounded-xl font-bold text-gray-700 border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-200 transition-all text-center"
+              >
+                How to Install
+              </button>
+              <a 
+                href="https://drive.google.com/uc?export=download&id=1knoOPoRcjfuCvftCH_sw-TlGlfq6jJcs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex-1 lg:flex-none px-10 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center justify-center gap-2 active:scale-95"
+              >
+                📥 Download App
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Install Instructions Modal */}
+      {showAppModal && (
+        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-8 sm:zoom-in duration-300">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-xl font-bold text-gray-900">How to Install the App</h3>
+              <button onClick={() => setShowAppModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 sm:p-8 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-6">
+                {[
+                  { step: "1", title: "Download the App", desc: "Click download and wait for APK to finish downloading" },
+                  { step: "2", title: "Open the File", desc: "Go to Downloads folder or tap the downloaded file" },
+                  { step: "3", title: "Allow Installation", desc: "Enable 'Allow installation from this browser' or 'Install unknown apps' in settings" },
+                  { step: "4", title: "Install the App", desc: "Tap Install and wait for installation" },
+                  { step: "5", title: "Open the App", desc: "Launch Salone Freelance and log in" }
+                ].map((item) => (
+                  <div key={item.step} className="flex gap-4">
+                    <div className="w-8 h-8 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center font-bold shrink-0">
+                      {item.step}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{item.title}</p>
+                      <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-100">
+              <button 
+                onClick={() => setShowAppModal(false)}
+                className="bg-primary-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200 w-full active:scale-95"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
