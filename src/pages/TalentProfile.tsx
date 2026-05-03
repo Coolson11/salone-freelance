@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Star, DollarSign, MessageSquare, Briefcase, ChevronRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { MapPin, Star, DollarSign, MessageSquare, Briefcase, ChevronRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { fetchReviewsForFreelancer, fetchTalentProfileById, makeChatId, fetchJobsByClientId, fetchCompletedJobsByFreelancerId } from '../services/marketplaceService';
 import { useAuth } from '../context/AuthContext';
 import { ProfileSkeleton } from '../components/Skeletons';

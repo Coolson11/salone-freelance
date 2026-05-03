@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const StatCardSkeleton = () => (
   <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
     <div className="w-12 h-12 bg-gray-200 rounded-xl mb-4"></div>

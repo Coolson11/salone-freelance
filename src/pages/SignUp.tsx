@@ -68,10 +68,7 @@ const SignUp: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo,
-          data: {
-            role: role
-          }
+          redirectTo
         }
       });
       if (error) {
